@@ -8,6 +8,10 @@
  (modules generator_bi))
 
 (executables
+ (names async_await)
+ (modules async_await))
+
+(executables
  (names concurrent)
  (modules sched concurrent))
 

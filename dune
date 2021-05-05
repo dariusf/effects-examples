@@ -3,6 +3,10 @@
   (flags (:standard -w -50 -w -32 -w -27))))
 
 (executables
+ (names generator_bi)
+ (modules generator_bi))
+
+(executables
  (names concurrent)
  (modules sched concurrent))
 

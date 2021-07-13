@@ -21,24 +21,9 @@ module State (S : sig type t end) : STATE with type t = S.t = struct
     let comp =
       match f () with
       | x -> (fun s -> (s, x))
-      | effect (Put s') k ->
-        (* ignore the current state, continue with unit, and pass s'
-           as the value of the current state to the next effect.
-
-           this takes advantage of the control flow of the handler
-           returning; the continuation is never invoked so the function
-           here is returned from the _previous_ continue that made f
-           resume and raise the _current_ effect. *)
-        (fun _s -> (continue k ()) s')
-      | effect Get k ->
-        (* the parameter is the previous value of the state,
-           initially the initial value, and after that given by
-           the _previous_ effect.
-
-           parenthesizing the continue call makes this clearer. *)
-        (fun s -> (continue k s) s)
-    in
-    comp init
+      | effect (Put s') k -> (fun _s -> continue k () s')
+      | effect Get k -> (fun s -> continue k s s)
+    in comp init
 end
 
 module IS = State (struct type t = int end)
@@ -55,6 +40,4 @@ let foo () : unit =
   SS.put "world";
   printf "%s\n" (SS.get ())
 
-(* ('s, 'a) *)
-(* ('s, ('s1, 'a1)) *)
-let _ : int * (string * unit) = IS.run (fun () -> SS.run foo ~init:"") ~init:0
+let _ = IS.run (fun () -> SS.run foo ~init:"") ~init:0

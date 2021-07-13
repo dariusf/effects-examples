@@ -44,7 +44,6 @@ end
 module IS = State (struct type t = int end)
 module SS = State (struct type t = string end)
 
-(* (IS.get . IS.put)^2 . IS.get . (SS.put . SS.get)^2 *)
 let foo () : unit =
   printf "%d\n" (IS.get ());
   IS.put 42;

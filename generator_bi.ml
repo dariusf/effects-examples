@@ -34,17 +34,20 @@ effect Yield : int -> int action
 
 effect Behead : unit
 
+(* ensures Yield *)
 let yield x = perform (Yield x)
 
+(* ensures Behead *)
 let behead () = perform (Behead)
 
+(* ensures \x -> Yield.Behead?.x *)
+(* ensures (Yield.Behead?)^* *)
 let rec iter xs =
   begin
     match yield xs.head with
     | ToContinue -> ()
     | ToReplace v -> xs.head <- v
     | ToBehead -> behead ()
-
   end;
   match xs.tail with
   | None -> ()
@@ -52,6 +55,7 @@ let rec iter xs =
     try
       iter tl
     with effect Behead k ->
+      (* policy: Behead -> (Yield.Behead?)^* *)
       xs.tail <- tl.tail;
       continue k ()
 
@@ -67,6 +71,7 @@ let () =
       iter (!xs |> get)
     with
       | effect (Yield v) k ->
+        (* Yield -> Behead?(Yield.Behead?)^* *)
         if v < 0 then (
           Format.printf "Beheading %d@." v;
           continue k ToBehead
@@ -75,6 +80,7 @@ let () =
           continue k (ToReplace (v * 2))
         )
       | effect Behead k ->
+        (* Behead -> (Yield.Behead?)^* *)
         xs := (!xs |> get).tail;
         continue k ()
   end;
